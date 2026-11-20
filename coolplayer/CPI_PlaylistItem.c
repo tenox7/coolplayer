@@ -2123,11 +2123,13 @@ void CPLI_WriteTag_OGG(CPs_PlaylistItem* pItem, HANDLE hFile)
 		iPacketByteIDX = 7;
 		
 		// Decode strings
+		/* memcpy: these 32-bit fields sit at any offset, and an *(unsigned int*)
+		   there faults on MIPS, Alpha and PowerPC (here and in the writer below) */
 		{
 			unsigned int iStringLength;
 			unsigned int iCommentIDX;
 			
-			iStringLength = *(unsigned int*)(pCommentPacket + iPacketByteIDX);
+			memcpy(&iStringLength, pCommentPacket + iPacketByteIDX, 4);
 			iPacketByteIDX += 4;
 			comment.m_pcVendorString = (char*)malloc(iStringLength + 1);
 			memcpy(comment.m_pcVendorString, pCommentPacket + iPacketByteIDX, iStringLength);
@@ -2135,7 +2137,7 @@ void CPLI_WriteTag_OGG(CPs_PlaylistItem* pItem, HANDLE hFile)
 			comment.m_pcVendorString[iStringLength] = '\0';
 			
 			// Read in the comments
-			comment.m_iNumComments = *(unsigned int*)(pCommentPacket + iPacketByteIDX);
+			memcpy(&comment.m_iNumComments, pCommentPacket + iPacketByteIDX, 4);
 			iPacketByteIDX += 4;
 			
 			if (comment.m_iNumComments)
@@ -2144,7 +2146,7 @@ void CPLI_WriteTag_OGG(CPs_PlaylistItem* pItem, HANDLE hFile)
 				
 				for (iCommentIDX = 0; iCommentIDX < comment.m_iNumComments; iCommentIDX++)
 				{
-					iStringLength = *(unsigned int*)(pCommentPacket + iPacketByteIDX);
+					memcpy(&iStringLength, pCommentPacket + iPacketByteIDX, 4);
 					iPacketByteIDX += 4;
 					comment.m_ppUserStrings[iCommentIDX] = (char*)malloc(iStringLength + 1);
 					memcpy(comment.m_ppUserStrings[iCommentIDX], pCommentPacket + iPacketByteIDX, iStringLength);
@@ -2273,19 +2275,19 @@ void CPLI_WriteTag_OGG(CPs_PlaylistItem* pItem, HANDLE hFile)
 			
 			// Vendor string
 			iStringLength = strlen(comment.m_pcVendorString);
-			*(unsigned int*)(pFrame + iWriteCursor) = iStringLength;
+			memcpy(pFrame + iWriteCursor, &iStringLength, 4);
 			iWriteCursor += 4;
 			memcpy(pFrame + iWriteCursor, comment.m_pcVendorString, iStringLength);
 			iWriteCursor += iStringLength;
 			
 			// Comments
-			*(unsigned int*)(pFrame + iWriteCursor) = comment.m_iNumComments;
+			memcpy(pFrame + iWriteCursor, &comment.m_iNumComments, 4);
 			iWriteCursor += 4;
 			
 			for (iCommentIDX = 0; iCommentIDX < comment.m_iNumComments; iCommentIDX++)
 			{
 				iStringLength = strlen(comment.m_ppUserStrings[iCommentIDX]);
-				*(unsigned int*)(pFrame + iWriteCursor) = iStringLength;
+				memcpy(pFrame + iWriteCursor, &iStringLength, 4);
 				iWriteCursor += 4;
 				memcpy(pFrame + iWriteCursor, comment.m_ppUserStrings[iCommentIDX], iStringLength);
 				iWriteCursor += iStringLength;

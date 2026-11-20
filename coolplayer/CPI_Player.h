@@ -35,8 +35,7 @@
 // Known Output modules (must be sequential and zero based)
 //
 #define CP_OUTPUT_WAVE				0x0
-#define CP_OUTPUT_DIRECTSOUND		0x1
-#define CP_OUTPUT_FILE				0x2
+#define CP_OUTPUT_FILE				0x1
 #define CP_OUTPUT_last				CP_OUTPUT_FILE
 
 

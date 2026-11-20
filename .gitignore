@@ -1,0 +1,5 @@
+*.obj
+*.lib
+*.res
+/coolplayer.exe
+.DS_Store

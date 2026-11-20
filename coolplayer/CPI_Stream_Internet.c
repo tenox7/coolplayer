@@ -22,6 +22,7 @@
 
 #include "stdafx.h"
 #include "globals.h"
+#include "WindowsOS.h"
 #include "CPI_Stream.h"
 #include "CPI_CircleBuffer.h"
 #include "CPI_Player_Messages.h"
@@ -79,7 +80,7 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 	HINTERNET hURLStream;
 	DWORD dwTimeout;
 	BOOL bStreamComplete = FALSE;
-	INTERNET_BUFFERS internetbuffer;
+	CPs_InternetBuffers internetbuffer;
 	BYTE bReadBuffer[CIC_READCHUNKSIZE];
 	
 	CP_CHECKOBJECT(pContext);
@@ -87,9 +88,9 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 	PostMessage(pContext->m_hWndNotify, CPNM_SETSTREAMINGSTATE, (WPARAM)TRUE, (LPARAM)0);
 	
 	// Check that we can open this file
-	hInternet = InternetOpen("CoolPlayer",
+	hInternet = CP_LoadWinInet() ? pfnInternetOpen("CoolPlayer",
 							 INTERNET_OPEN_TYPE_PRECONFIG,
-							 NULL, NULL, 0L);
+							 NULL, NULL, 0L) : NULL;
 	                         
 	if (hInternet == NULL)
 	{
@@ -99,9 +100,9 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 	}
 	
 	dwTimeout = 2000;
-	InternetSetOption(hInternet, INTERNET_OPTION_CONNECT_TIMEOUT, &dwTimeout, sizeof(dwTimeout));
+	pfnInternetSetOption(hInternet, INTERNET_OPTION_CONNECT_TIMEOUT, &dwTimeout, sizeof(dwTimeout));
 	
-	hURLStream = InternetOpenUrl(hInternet,
+	hURLStream = pfnInternetOpenUrl(hInternet,
 								 pContext->m_pcFlexiURL,
 								 NULL,
 								 0,
@@ -111,7 +112,7 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 	                             
 	if (hURLStream == NULL)
 	{
-		InternetCloseHandle(hInternet);
+		pfnInternetCloseHandle(hInternet);
 		pContext->m_pCircleBuffer->SetComplete(pContext->m_pCircleBuffer);
 		CP_TRACE1("EP_FillerThread::NoOpenURL %s", pContext->m_pcFlexiURL);
 		return 0;
@@ -140,7 +141,7 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 		// Read in another chunk - if we don't get any data that's ok - we would rather poll the
 		// buffers than just hang on the socket (so the stream can be shutdown if needed)
 		internetbuffer.dwBufferLength = CIC_READCHUNKSIZE;
-		bReadResult = InternetReadFileEx(hURLStream, &internetbuffer, IRF_NO_WAIT, 0);
+		bReadResult = pfnInternetReadFileEx(hURLStream, &internetbuffer, IRF_NO_WAIT, 0);
 		
 		if (bReadResult == FALSE)
 			bStreamComplete = TRUE;
@@ -161,9 +162,9 @@ unsigned int _stdcall EP_FillerThread(void* _pContext)
 			Sleep(20);
 	}
 	
-	InternetCloseHandle(hURLStream);
+	pfnInternetCloseHandle(hURLStream);
 	
-	InternetCloseHandle(hInternet);
+	pfnInternetCloseHandle(hInternet);
 	
 	pContext->m_pCircleBuffer->SetComplete(pContext->m_pCircleBuffer);
 	PostMessage(pContext->m_hWndNotify, CPNM_SETSTREAMINGSTATE, (WPARAM)FALSE, (LPARAM)0);

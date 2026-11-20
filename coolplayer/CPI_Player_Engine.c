@@ -81,7 +81,6 @@ DWORD WINAPI CPI_Player__EngineEP(void* pCookie)
 	playercontext.m_dwCurrentOutputModule = options.decoder_output_mode;
 	
 	CPI_Player_Output_Initialise_WaveMapper(&playercontext.m_OutputModules[CP_OUTPUT_WAVE]);
-	CPI_Player_Output_Initialise_DirectSound(&playercontext.m_OutputModules[CP_OUTPUT_DIRECTSOUND]);
 	CPI_Player_Output_Initialise_File(&playercontext.m_OutputModules[CP_OUTPUT_FILE]);
 	
 	playercontext.m_pCurrentOutputModule = &playercontext.m_OutputModules[playercontext.m_dwCurrentOutputModule];

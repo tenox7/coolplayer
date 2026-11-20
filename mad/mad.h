@@ -24,7 +24,7 @@
 extern "C" {
 # endif
 
-# define FPM_INTEL
+# define FPM_DEFAULT  /* portable C, as the library is built; FPM_INTEL is x86 assembler */
 
 
 

@@ -83,16 +83,19 @@ CPs_Image* CPIG_CreateImage_FromSubFile(CP_COMPOSITEFILE hmComposite, const char
 		
 		// Check bitmap cookie
 		
-		if (pFileHeader->bfType != 0x4D42)
+		if (iLength <= sizeof(BITMAPFILEHEADER) || pFileHeader->bfType != 0x4D42)
 		{
 			free(pFileData);
 			return NULL;
 		}
 		
 		// Upload bitmap to a DDB
-		pBitmapInfo = (BITMAPINFO*)(((BYTE*)pFileData) + sizeof(BITMAPFILEHEADER));
+		/* The BITMAPINFO is at offset 14 of the file: not 4-aligned. NT on MIPS
+		   stops the program at an unaligned load, so use an aligned copy. */
+		pBitmapInfo = (BITMAPINFO*)malloc(iLength - sizeof(BITMAPFILEHEADER));
+		memcpy(pBitmapInfo, ((BYTE*)pFileData) + sizeof(BITMAPFILEHEADER), iLength - sizeof(BITMAPFILEHEADER));
 		
-		pBitmapBytes = ((BYTE*)pFileData) + pFileHeader->bfOffBits;
+		pBitmapBytes = ((BYTE*)pBitmapInfo) + pFileHeader->bfOffBits - sizeof(BITMAPFILEHEADER);
 		
 		dcDisplay = GetDC(NULL);
 		
@@ -110,6 +113,7 @@ CPs_Image* CPIG_CreateImage_FromSubFile(CP_COMPOSITEFILE hmComposite, const char
 		          
 		// Cleanup
 		DeleteDC(dcDraw);
+		free(pBitmapInfo);
 	}
 	
 	free(pFileData);

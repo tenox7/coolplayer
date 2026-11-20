@@ -116,7 +116,7 @@ static inline int vorbis_ftoi(double f){  /* yes, double!  Otherwise,
 #endif
 
 
-#if defined(_WIN32) && !defined(__GNUC__) && !defined(__BORLANDC__)
+#if defined(_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__BORLANDC__)
 #  define VORBIS_FPU_CONTROL
 
 typedef ogg_int16_t vorbis_fpu_control;
@@ -156,7 +156,9 @@ static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
 typedef int vorbis_fpu_control;
 
 static int vorbis_ftoi(double f){
-  return (int)(f+.5);
+  /* (int) rounds towards zero, so without floor() each negative sample
+     comes out 1 too high. This is the fix from libvorbis 1.3. */
+  return (int)floor(f+.5);
 }
 
 /* We don't have special code for this compiler/arch, so do it the slow way */

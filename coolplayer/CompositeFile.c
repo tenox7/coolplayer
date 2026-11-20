@@ -321,8 +321,10 @@ BOOL CP_BuildDirectory(CP_COMPOSITEFILE hComposite)
 	// Scan the composite for the file headers (ignore the end directory stuff)
 	iOffset = 0;
 	
+	/* The signature may sit at any offset: read it through the packed struct.
+	   A plain *(DWORD*) there faults on MIPS, Alpha and PowerPC. */
 	while (((iOffset + sizeof(CPs_PKFILE_HEADER)) < pContext->m_dwFileSize)
-			&& *(DWORD*)(pContext->m_pFileBase + iOffset) != CPC_PKFILE_DIRMAGIC)
+			&& ((CPs_PKFILE_HEADER*)(pContext->m_pFileBase + iOffset))->m_dwSig != CPC_PKFILE_DIRMAGIC)
 	{
 		CPs_PKFILE_HEADER* pHeader = (CPs_PKFILE_HEADER*)(pContext->m_pFileBase + iOffset);
 		CPs_SubFile* pNewSubFile;

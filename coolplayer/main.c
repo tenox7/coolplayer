@@ -2035,21 +2035,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND    hWnd;
 	MSG     msg;
 	HRGN    winregion;
-	INITCOMMONCONTROLSEX controls;
 	HMENU   hpopup;
 	BOOL    bAlreadyRuning;
 	HANDLE  hMutexOneInstance;
 	HWND hWndCoolPlayer = NULL;
 	
-	// Ensure that this system is audio capable
+	options_read();
 	
-	if (waveOutGetNumDevs() < 1)
+	// Ensure that this system is audio capable
+	/* File output writes WAV files: it needs no sound device */
+	
+	if (waveOutGetNumDevs() < 1 && options.decoder_output_mode != CP_OUTPUT_FILE)
 	{
 		MessageBox(GetDesktopWindow(), "No audio devices in this system", "CoolPlayer", MB_ICONSTOP | MB_OK);
 		return -1;
 	}
-	
-	options_read();
 	
 	hMutexOneInstance = CreateMutex(NULL, FALSE, "COOLPLAYER-045FA840-B10D-2G3-3436-006067709674");
 	bAlreadyRuning = (GetLastError() == ERROR_ALREADY_EXISTS
@@ -2099,12 +2099,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			return FALSE;  // terminates the creation
 	}
 	
-	/* kill this */
-	controls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-	
-	controls.dwICC = ICC_BAR_CLASSES;
-	
-	InitCommonControlsEx(&controls);
+	/* not InitCommonControlsEx: it needs comctl32 4.70 (Internet Explorer 3), NT 4.0 has 4.00 */
+	InitCommonControls();
 	
 	//    options.shuffle_play = FALSE;
 	//  options.repeat_playlist = FALSE;

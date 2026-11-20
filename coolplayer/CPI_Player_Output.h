@@ -83,7 +83,6 @@ typedef struct _CPs_OutputModule
 ////////////////////////////////////////////////////////////////////////////////
 // Output initialisers
 void CPI_Player_Output_Initialise_WaveMapper(CPs_OutputModule* pModule);
-void CPI_Player_Output_Initialise_DirectSound(CPs_OutputModule* pModule);
 void CPI_Player_Output_Initialise_File(CPs_OutputModule* pModule);
 
 ////////////////////////////////////////////////////////////////////////////////

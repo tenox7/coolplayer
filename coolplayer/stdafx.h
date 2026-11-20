@@ -1,4 +1,5 @@
 #define _WIN32_WINDOWS 0x0410
+#define _WIN32_WINNT 0x0400  /* the 1996 SDK shows NT 4.0 names (WM_MOUSEWHEEL) only with it */
 #define WIN32_LEAN_AND_MEAN
 
 #define _WIN32_IE 0x600
@@ -11,7 +12,6 @@
 #include <limits.h>
 #include "debug.h"
 #include <process.h>
-#include <wininet.h>
 // #include <search.h>
 #include <malloc.h>
 #include <time.h>
@@ -63,6 +63,19 @@ void __cdecl _swab(const char*, char*, size_t);
 
 #ifndef OFN_ENABLESIZING
 #define OFN_ENABLESIZING             0x00800000
+#endif
+
+/* NT 4.0 names that the Visual C++ 4.1 headers (1995) lack */
+#ifndef WM_MOUSEWHEEL
+#define WM_MOUSEWHEEL 0x020A
+#endif
+#ifndef ICON_SMALL
+#define ICON_SMALL 0
+#define ICON_BIG 1
+#endif
+
+#ifndef BIF_EDITBOX  /* shell32 4.71 (Internet Explorer 4); NT 4.0 shell32 ignores it */
+#define BIF_EDITBOX 0x0010
 #endif
 
 #ifndef IRF_NO_WAIT

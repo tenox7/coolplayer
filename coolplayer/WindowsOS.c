@@ -29,6 +29,11 @@
 wp_GetMonitorInfo pfnGetMonitorInfo;
 wp_MonitorFromWindow pfnMonitorFromWindow;
 wp_TrackMouseEvent pfnTrackMouseEvent;
+wp_InternetOpen pfnInternetOpen;
+wp_InternetOpenUrl pfnInternetOpenUrl;
+wp_InternetReadFileEx pfnInternetReadFileEx;
+wp_InternetSetOption pfnInternetSetOption;
+wp_InternetCloseHandle pfnInternetCloseHandle;
 ////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -39,6 +44,31 @@ void CP_InitWindowsRoutines()
 	pfnGetMonitorInfo = (wp_GetMonitorInfo)GetProcAddress(hmUser32, "GetMonitorInfoA");
 	pfnMonitorFromWindow = (wp_MonitorFromWindow)GetProcAddress(hmUser32, "MonitorFromWindow");
 	pfnTrackMouseEvent = (wp_TrackMouseEvent)GetProcAddress(hmUser32, "TrackMouseEvent");
+}
+
+/* Loads WININET.DLL on first use. FALSE: there is none, or it lacks one of
+   the functions below. Then there are no internet streams. */
+BOOL CP_LoadWinInet(void) {
+	static BOOL bTried = FALSE;
+	HMODULE hmWinInet;
+
+	if (bTried)
+		return pfnInternetOpen != NULL;
+	bTried = TRUE;
+	hmWinInet = LoadLibrary("WININET.DLL");
+	if (hmWinInet == NULL)
+		return FALSE;
+	pfnInternetOpenUrl = (wp_InternetOpenUrl)GetProcAddress(hmWinInet, "InternetOpenUrlA");
+	pfnInternetReadFileEx = (wp_InternetReadFileEx)GetProcAddress(hmWinInet, "InternetReadFileExA");
+	pfnInternetSetOption = (wp_InternetSetOption)GetProcAddress(hmWinInet, "InternetSetOptionA");
+	pfnInternetCloseHandle = (wp_InternetCloseHandle)GetProcAddress(hmWinInet, "InternetCloseHandle");
+	if (!pfnInternetOpenUrl || !pfnInternetReadFileEx || !pfnInternetSetOption || !pfnInternetCloseHandle) {
+		FreeLibrary(hmWinInet);
+		return FALSE;
+	}
+	/* last: the callers test this one */
+	pfnInternetOpen = (wp_InternetOpen)GetProcAddress(hmWinInet, "InternetOpenA");
+	return pfnInternetOpen != NULL;
 }
 
 //

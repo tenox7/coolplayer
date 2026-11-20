@@ -155,7 +155,7 @@ void    options_read(void)
 		GetPrivateProfileInt("Misc", "DelayTime", 0, pathbuf);
 	    
 	options.decoder_output_mode =
-		GetPrivateProfileInt("Misc", "Outputmode", 1, pathbuf);
+		GetPrivateProfileInt("Misc", "Output", 0, pathbuf);  /* 0 = WaveOut. A new key: in "Outputmode", 1 was DirectSound */
 	    
 	options.easy_move =
 		GetPrivateProfileInt("Misc", "Easymove", 1, pathbuf);
@@ -432,7 +432,7 @@ void    options_write()
 	WritePrivateProfileString("Misc", "AllowMultipleInstances",
 							  _itoa(options.allow_multiple_instances, intbuf,
 									10), pathbuf);
-	WritePrivateProfileString("Misc", "Outputmode",
+	WritePrivateProfileString("Misc", "Output",
 							  _itoa(options.decoder_output_mode, intbuf,
 									10), pathbuf);
 	WritePrivateProfileString("Misc", "Scrolltitle",

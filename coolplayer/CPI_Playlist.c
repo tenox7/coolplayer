@@ -22,6 +22,7 @@
 
 #include "stdafx.h"
 #include "globals.h"
+#include "WindowsOS.h"
 #include "CPI_Playlist.h"
 #include "CPI_PlaylistItem.h"
 #include "CPI_PlaylistItem_Internal.h"
@@ -1133,7 +1134,7 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 		HINTERNET hURLStream;
 		HINTERNET hInternet;
 		DWORD dwTimeout, dwBytesRead;
-		INTERNET_BUFFERS internetbuffer;
+		CPs_InternetBuffers internetbuffer;
 		char *pcPlaylistBuffer;
 		unsigned int iLastLineStartIDX, iCharIDX;
 		
@@ -1148,9 +1149,9 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 				(_strnicmp(pcFilename, CIC_FTPHEADER, sizeof(CIC_FTPHEADER) - 1) == 0))
 		{
 			// This playlist is located on the internet, so we have to download it.
-			hInternet = InternetOpen("CoolPlayer",
+			hInternet = CP_LoadWinInet() ? pfnInternetOpen("CoolPlayer",
 									 INTERNET_OPEN_TYPE_PRECONFIG,
-									 NULL, NULL, 0L);
+									 NULL, NULL, 0L) : NULL;
 			                         
 			if (hInternet == NULL)
 			{
@@ -1159,9 +1160,9 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 			}
 			
 			dwTimeout = 2000;
-			InternetSetOption(hInternet, INTERNET_OPTION_CONNECT_TIMEOUT, &dwTimeout, sizeof(dwTimeout));
+			pfnInternetSetOption(hInternet, INTERNET_OPTION_CONNECT_TIMEOUT, &dwTimeout, sizeof(dwTimeout));
 			
-			hURLStream = InternetOpenUrl(hInternet,
+			hURLStream = pfnInternetOpenUrl(hInternet,
 										 pcFilename,
 										 NULL,
 										 0,
@@ -1171,7 +1172,7 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 			                             
 			if (hURLStream == NULL)
 			{
-				InternetCloseHandle(hInternet);
+				pfnInternetCloseHandle(hInternet);
 				CP_TRACE1("CPL_AddFile::NoOpenURL %s", pcFilename);
 				return;
 			}
@@ -1182,8 +1183,8 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 			if (!pcPlaylistBuffer)
 			{
 				// Failed to allocate, we're done.
-				InternetCloseHandle(hInternet);
-				InternetCloseHandle(hURLStream);
+				pfnInternetCloseHandle(hInternet);
+				pfnInternetCloseHandle(hURLStream);
 				CP_TRACE1("CPL_AddFile::AllocateError %s", pcFilename);
 				return;
 			}
@@ -1197,11 +1198,11 @@ void CPL_AddFile(CP_HPLAYLIST hPlaylist, const char* pcFilename)
 			
 			// We attemt to read the file in a single read.  If that doesn't work. we don't
 			// bother to continue.
-			bReadResult = InternetReadFileEx(hURLStream, &internetbuffer, IRF_NO_WAIT, 0);
+			bReadResult = pfnInternetReadFileEx(hURLStream, &internetbuffer, IRF_NO_WAIT, 0);
 			
-			InternetCloseHandle(hURLStream);
+			pfnInternetCloseHandle(hURLStream);
 			
-			InternetCloseHandle(hInternet);
+			pfnInternetCloseHandle(hInternet);
 			
 			if ((!bReadResult) || (!internetbuffer.dwBufferLength))
 			{

@@ -27,18 +27,24 @@ int main_set_default_skin(void)
 	HINSTANCE hInstance;
 	float   positionpercentage;
 	
+	/* The size is 0 until the first skin is loaded. No 0/0 here: NT on Alpha
+	   can stop the program with "Floating-point invalid operation". */
+	positionpercentage = 0.0f;
+	
 	if (Skin.Object[PositionSlider].maxw == 1)
 	{
-		positionpercentage =
-			(float) globals.main_int_track_position /
-			(float) Skin.Object[PositionSlider].h;
+		if (Skin.Object[PositionSlider].h != 0)
+			positionpercentage =
+				(float) globals.main_int_track_position /
+				(float) Skin.Object[PositionSlider].h;
 	}
 	
 	else
 	{
-		positionpercentage =
-			(float) globals.main_int_track_position /
-			(float) Skin.Object[PositionSlider].w;
+		if (Skin.Object[PositionSlider].w != 0)
+			positionpercentage =
+				(float) globals.main_int_track_position /
+				(float) Skin.Object[PositionSlider].w;
 	}
 	
 	globals.main_int_title_scroll_position = 0;
@@ -255,18 +261,24 @@ int     main_skin_open(char *name)
 	};
 	float   positionpercentage;
 	
+	/* The size is 0 until the first skin is loaded. No 0/0 here: NT on Alpha
+	   can stop the program with "Floating-point invalid operation". */
+	positionpercentage = 0.0f;
+	
 	if (Skin.Object[PositionSlider].maxw == 1)
 	{
-		positionpercentage =
-			(float) globals.main_int_track_position /
-			(float) Skin.Object[PositionSlider].h;
+		if (Skin.Object[PositionSlider].h != 0)
+			positionpercentage =
+				(float) globals.main_int_track_position /
+				(float) Skin.Object[PositionSlider].h;
 	}
 	
 	else
 	{
-		positionpercentage =
-			(float) globals.main_int_track_position /
-			(float) Skin.Object[PositionSlider].w;
+		if (Skin.Object[PositionSlider].w != 0)
+			positionpercentage =
+				(float) globals.main_int_track_position /
+				(float) Skin.Object[PositionSlider].w;
 	}
 	
 	globals.main_int_title_scroll_position = 0;
