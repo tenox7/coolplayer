@@ -2,8 +2,10 @@
 
 CoolPlayer is an MP3 and Ogg Vorbis player with skins, by Niek Albers and
 others (see [Authors](#authors)). This tree builds CoolPlayer 2.19 for
-Windows NT 4.0 on x86, MIPS, Alpha AXP and PowerPC, from one source and one
-Makefile.
+Windows NT 4.0 on x86, MIPS, Alpha AXP and PowerPC, and for PINT 4.0 (Windows
+NT 4.0 on 32-bit ARM, for the Raspberry Pi), from one source and one Makefile.
+
+![CoolPlayer 2.19 on PINT 4.0 (Windows NT 4.0 on ARM) in QEMU](screenshot.png)
 
 ## Source
 
@@ -15,12 +17,15 @@ Makefile.
 
 ## Programs
 
+Get them from the [latest release](https://github.com/tenox7/coolplayer/releases/latest):
+
 | File | CPU | Bytes |
 |---|---|---|
-| `bin/coolplayer-x86-nt40.exe` | x86 | 637,440 |
-| `bin/coolplayer-mips-nt40.exe` | MIPS R4000 | 982,528 |
-| `bin/coolplayer-axp-nt40.exe` | Alpha AXP | 856,064 |
-| `bin/coolplayer-ppc-nt40.exe` | PowerPC | 828,928 |
+| `coolplayer-x86-nt40.exe` | x86 | 637,440 |
+| `coolplayer-mips-nt40.exe` | MIPS R4000 | 982,528 |
+| `coolplayer-axp-nt40.exe` | Alpha AXP | 856,064 |
+| `coolplayer-ppc-nt40.exe` | PowerPC | 828,928 |
+| `coolplayer-arm-pint40.exe` | ARM (PINT 4.0) | 630,272 |
 
 - Each program is one file. The default skin is inside it.
 - They use only DLLs that NT 4.0 has: KERNEL32, USER32, GDI32, COMDLG32,
@@ -44,7 +49,16 @@ On NT 4.0, with Visual C++ 4.x for the CPU and the Win32 SDK of 1996:
   xcopy does not copy them. Before you copy, run `chflags -R nohidden .` in
   this tree on the Mac.
 
-Compilers used for `bin/`:
+For PINT 4.0 (ARM), use the PINT 4.0 SDK in Docker, in this tree:
+
+    docker run --rm -v msvc-arm32:/opt/msvc -v "$PWD":/src tenox7/pint40sdk nmake
+
+- First install Microsoft C for ARM into the `msvc-arm32` volume once, as the
+  SDK's README says (`docker run --rm tenox7/pint40sdk` shows it).
+- The SDK's `link` marks the program for NT 4.0.
+- ARM needs no source change.
+
+Compilers used for the release:
 
 | CPU | cl | link | Where |
 |---|---|---|---|
@@ -52,6 +66,7 @@ Compilers used for `bin/`:
 | MIPS | 10.00.6081 (Visual C++ 4.0) | 3.10.6053 | lab VM nt40mips |
 | Alpha | 10.10.6079 (Visual C++ 4.1) | 3.10.6038 | lab VM nt40axp |
 | PowerPC | 10.10.6101 (Visual C++ 4.1) | 3.10.6083 | lab VM nt40ppc |
+| ARM | 19.44.35229 (Microsoft C for ARM 14.44) | 14.44.35229 | `tenox7/pint40sdk` Docker image |
 
 ## Makefile flags
 
@@ -61,7 +76,8 @@ Compilers used for `bin/`:
   denormal numbers, as the other CPUs do.
 - zlib, all CPUs: `-Og-`. With `-Og`, Visual C++ 4.2 for x86 makes a bad
   `inflate.c`. Then 5 of the 27 skin files do not unpack, and CoolPlayer stops
-  at start with an access violation. zlib only unpacks the skin.
+  at start with an access violation. zlib only unpacks the skin. Microsoft C
+  for ARM warns that `-Og-` is deprecated (D9035). The warning does no harm.
 - libmad: `-DFPM_DEFAULT -DASO_ZEROCHECK -DHAVE_CONFIG_H`, as in upstream's
   `mad.dsp`.
 
@@ -120,24 +136,31 @@ Made in November 2026. The git history has each change.
 
 ## Tests
 
-NT 4.0 in the lab VMs (QEMU), with File output:
+NT 4.0 in QEMU VMs (PINT 4.0: the PINT 4.0 release of 2026-11-19 on QEMU
+raspi2b), with File output:
 
-| Test | x86 | MIPS | Alpha | PowerPC |
-|---|---|---|---|---|
-| Start, default skin, playlist window | ok | ok | ok | ok |
-| MP3, 44.1 kHz stereo | ok | ok | ok | ok |
-| MP3, 22 kHz mono (MPEG-2) | ok | ok | ok | ok |
-| Ogg Vorbis | ok | ok | ok | ok |
-| Equalizer | not tested | ok | ok | ok |
-| Exit (Esc) | ok | ok | ok | ok |
+| Test | x86 | MIPS | Alpha | PowerPC | ARM |
+|---|---|---|---|---|---|
+| Start, default skin, playlist window | ok | ok | ok | ok | ok |
+| MP3, 44.1 kHz stereo | ok | ok | ok | ok | ok |
+| MP3, 22 kHz mono (MPEG-2) | ok | ok | ok | ok | ok |
+| Ogg Vorbis | ok | ok | ok | ok | ok |
+| Equalizer | not tested | ok | ok | ok | ok |
+| Exit (Esc) | ok | ok | ok | ok | ok |
+| WaveOut | no device | no device | no device | no device | plays, no sound in QEMU |
 
-- MP3: the WAV output is bit-identical on the four CPUs. It has 61 dB SNR
+- MP3: the WAV output is bit-identical on the five CPUs. It has 61 dB SNR
   against ffmpeg's decoder. This is libmad `FPM_DEFAULT`, as in upstream.
-- Ogg: the four CPUs differ by at most 1 LSB, on 0.1 % of the samples
-  (floating point). 83 dB SNR against ffmpeg on the left channel. The right
-  channel of the test file is bad in both decoders: it comes from ffmpeg's
-  experimental Vorbis encoder.
-- Equalizer: bit-identical on MIPS, Alpha and PowerPC.
+- CoolPlayer's MP3 dither keeps its state from one file to the next. To
+  compare outputs, play the same files in the same order in one run. These
+  tests used `coolplayer.exe t.mp3 m22.mp3 o.ogg`.
+- Ogg: the CPUs differ by at most 1 LSB, on 0.1 % of the samples (floating
+  point). ARM gives the same output as MIPS and Alpha. 83 dB SNR against ffmpeg
+  on the left channel. The right channel of the test file is bad in both
+  decoders: it comes from ffmpeg's experimental Vorbis encoder.
+- Equalizer: bit-identical on MIPS, Alpha, PowerPC and ARM.
+- WaveOut on PINT 4.0 in QEMU: CoolPlayer opens the device and plays, about 2
+  times faster than real time, with no sound.
 - Also seen working: ID3 and Ogg titles in the playlist, the Options dialog
   and the tray menu.
 
@@ -147,14 +170,15 @@ To test with no sound device, put this `coolplayer.ini` next to the program:
     Output=1
 
 For each file, CoolPlayer then shows a Save As dialog and writes `<name>.wav`.
+If Enter does nothing in the dialog, click its title bar first.
 
 Not tested:
 
-- WaveOut (real sound). No lab VM has a working sound device. nt40ppc has a
-  CS4231A chip, but NT 4.0 has no driver for it.
+- WaveOut with real sound. No lab VM has a working sound device. nt40ppc has
+  a CS4231A chip, but NT 4.0 has no driver for it.
 - Internet streams. They need the network.
 - Skins from files. Only the default skin was used.
-- Real hardware.
+- Real hardware, also a real Raspberry Pi.
 
 ## Known issues
 
@@ -162,6 +186,9 @@ Not tested:
   that is not full (`CPI_Player_CoDec_MPEG.c`, `return FALSE` at end of file).
   Up to about 0.2 s at 44.1 kHz stereo is lost; 0.16 s with the test file.
   WaveOut uses the same code. This port does not change it.
+- Upstream: with File output, the WAV header of an MP3 gives the full length,
+  but the file does not have the lost block. NT's Sound Recorder then says
+  that the file is corrupted.
 - On an 8-bit display (the MIPS and PowerPC VMs), the skin looks dithered.
 - Alpha in lemu: 0/0 stops the program even with `-QAieee1` and all
   floating-point exceptions masked. NT's software completion seems not to
@@ -171,7 +198,7 @@ Not tested:
 ## Next
 
 - NT 3.51 and NT 3.1.
-- WaveOut on real hardware.
+- WaveOut on real hardware, also PINT 4.0 on a Raspberry Pi.
 
 ## Authors
 

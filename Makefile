@@ -1,9 +1,11 @@
-# Makefile - CoolPlayer 2.19 for Windows NT 4.0: x86, MIPS, Alpha and PowerPC
+# Makefile - CoolPlayer 2.19 for Windows NT 4.0: x86, MIPS, Alpha and PowerPC,
+# and ARM (PINT 4.0)
 #
 #   nmake          builds coolplayer.exe for the CPU of this machine
 #   nmake clean    deletes what nmake made
 #
-# Visual C++ 4.x and the Win32 SDK of 1996.
+# Visual C++ 4.x and the Win32 SDK of 1996. For ARM: the PINT 4.0 SDK
+# (Microsoft C for ARM); it takes the -Ox branch below.
 # Object files don't depend on header files here: after you change a header,
 # run "nmake clean" first.
 

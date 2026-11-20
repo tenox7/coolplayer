@@ -3,3 +3,4 @@
 *.res
 /coolplayer.exe
 .DS_Store
+/bin/
